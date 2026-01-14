@@ -1,0 +1,14 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Source code
+*.ts text
+*.tsx text
+*.js text
+*.jsx text
+*.json text
+*.md text
+
+# Prisma
+*.prisma text
+

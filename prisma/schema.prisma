@@ -1,0 +1,125 @@
+// Admission Copilot - Prisma Schema
+// Database schema for university program matching and application management
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Core entities
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  profile   StudentProfile?
+  matches   Match[]
+  tasks     Task[]
+}
+
+model StudentProfile {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Geographic
+  citizenshipCountry    String
+  residenceCountry      String
+  targetCountries       String[] // Array of country codes
+  
+  // Academic
+  degreeLevel           String   // "Bachelors" | "Masters" | "PhD"
+  majorInterests        String[] // Array of fields
+  gpa                   Float?
+  gpaScale              String?  // "4.0" | "5.0" | "100"
+  
+  // Testing
+  englishTestType       String?  // "IELTS" | "TOEFL" | "Duolingo"
+  englishScore          Float?
+  standardizedTests     Json?    // {SAT: 1400, GRE_Verbal: 160, ...}
+  
+  // Financial
+  budgetMin             Int?     // USD per year
+  budgetMax             Int?
+  
+  // Timeline
+  intakeTerm            String?  // "Fall" | "Spring" | "Summer"
+  intakeYear            Int?
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model University {
+  id        String    @id @default(cuid())
+  name      String
+  country   String
+  city      String
+  createdAt DateTime  @default(now())
+  
+  programs  Program[]
+}
+
+model Program {
+  id                String   @id @default(cuid())
+  universityId      String
+  university        University @relation(fields: [universityId], references: [id])
+  
+  name              String
+  degreeLevel       String
+  fieldOfStudy      String
+  tuitionPerYear    Int      // USD
+  
+  // Requirements
+  minGpa            Float?
+  gpaScale          String?  // "4.0" | "5.0" | "100"
+  minEnglishScore   Float?
+  englishTestType   String?  // "IELTS" | "TOEFL" | "Duolingo"
+  
+  deadline          DateTime?
+  tags              String[] // Auto-generated + manual
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  matches           Match[]
+  tasks             Task[]
+}
+
+model Match {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  programId String
+  program   Program  @relation(fields: [programId], references: [id], onDelete: Cascade)
+  
+  fitScore  Float    // 0-100
+  tier      String   // "SAFE" | "MATCH" | "REACH"
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, programId])
+}
+
+model Task {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  programId   String
+  program     Program   @relation(fields: [programId], references: [id], onDelete: Cascade)
+  
+  title       String
+  description String?
+  status      String    @default("TODO") // "TODO" | "IN_PROGRESS" | "DONE"
+  dueDate     DateTime?
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
