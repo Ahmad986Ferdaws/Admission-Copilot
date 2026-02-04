@@ -241,10 +241,6 @@ npx prisma studio
 
 ### "GEMINI_API_KEY is not set"
 
-Make sure `.env` file exists and contains valid API key:
-```env
-GEMINI_API_KEY="AIzaSy..."
-```
 
 Restart dev server after changing `.env`.
 
